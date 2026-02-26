@@ -6,7 +6,7 @@ Minimal example that uses GUI_GSP: one screen, two labels, and a **language file
 
 - **main.c** — init, one screen, two labels (title and bottom line), main loop with `GUI_Run()`.
 - **Langs.h** / **Langs.c** — key definitions for the language pack (AppTitle, Hello, BottomLine).
-- **Langs_Pack/Langs/EN/English.json** — English strings for these keys (with font name per block). In the **same folder as the JSON** place the converted LVGL font binaries (e.g. **Ithaca_16.bin**); names in JSON must match the font file name without `.bin`.
+- **Langs_Pack/Langs/EN/English.json** — English strings for these keys (with font name per block). This example uses the **C font** **lv_font_unscii_8** (from `Fonts/lv_font_unscii_8.c` in the library). **No .bin file is needed** for that name — the library resolves it at runtime. For other font names (e.g. `"Ithaca_16"`) you must place the corresponding **.bin** in the same folder as the JSON.
 
 ## How to integrate into your project
 
@@ -21,7 +21,7 @@ Minimal example that uses GUI_GSP: one screen, two labels, and a **language file
 
 ## Language file format (English.json)
 
-Each key corresponds to a **KEY_NAME_** in Langs.c. The value is an array: first elements are the strings (index 0, 1, …), the last element is the font name for that block (e.g. `"lv_font_unscii_8"` or `"Ithaca_16"`). **In the same folder as the JSON** you must put the converted LVGL font binaries (e.g. **Ithaca_16.bin**); the name in the JSON must match the file name without `.bin`. The library loads these fonts from the pack when **Init_Langs** / **Load_Langs** is used.
+Each key corresponds to a **KEY_NAME_** in Langs.c. The value is an array: first elements are the strings (index 0, 1, …), the last element is the font name (e.g. `"lv_font_unscii_8"` for the built-in C font, or `"Ithaca_16"` for a FLASH font). For **C fonts** like **lv_font_unscii_8** (see `Fonts/lv_font_unscii_8.c`) **no .bin file is needed** — the library resolves the name to the built-in font. For fonts loaded from the pack (e.g. `"Ithaca_16"`) you must place **Ithaca_16.bin** in the same folder as the JSON. The demo uses **Set_Text_Font_Label()** so that both the string and the font from the pack (including C fonts) are applied.
 
 ## Building the language pack
 

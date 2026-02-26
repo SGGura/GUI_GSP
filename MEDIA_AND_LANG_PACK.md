@@ -78,6 +78,8 @@ Each key maps to an array of strings and the font name for that block. Example l
 
 Place the JSON file in a per-language folder, e.g. **Langs_Pack\Langs\EN\English.json**. **In the same folder as the JSON** you must put the **converted LVGL font binaries** (e.g. **Ithaca_16.bin**). Font names in the JSON (e.g. `"Ithaca_16"`) must match the font file names without the `.bin` extension. Generate the `.bin` with [LVGL Font Converter](https://lvgl.io/tools/fontconverter) (export as **Binary**).
 
+**C fonts (no .bin needed):** If you use a font linked as C source (e.g. **lv_font_unscii_8.c**, declared in **Fonts.h**), you can put its name in the JSON (e.g. `"lv_font_unscii_8"`). **No .bin file is required** — the library resolves it to the built-in font at runtime. Only fonts loaded from the pack (FLASH) need a `.bin` next to the JSON. See [PORTING_GUIDE](PORTING_GUIDE_EN.md) section 3.2.
+
 ### 2.3. Building PackLang.lpn
 
 **CrateLangsPack.exe** is included in this repository under **[Tools/CrateLangsPack.exe](Tools/CrateLangsPack.exe)**. It reads the **Langs** folder (one subfolder per language with JSON files) and writes **PackLang.lpn**:

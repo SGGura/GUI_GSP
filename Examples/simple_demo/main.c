@@ -31,20 +31,20 @@ static void CreateDemoScreen(void)
     DemoScreen = Crate_Screen(0, 0, SCREEN_HOR_SIZE, SCREEN_VER_SIZE, 0);
     if (!DemoScreen) return;
 
-    /* Title label: top center, string from language pack or fallback */
+    /* Title label: string and font from language pack (e.g. C font lv_font_unscii_8) or fallback */
     LabelTitle = Crate_Label(DemoScreen, 0, 2, SCREEN_HOR_SIZE, 12, 1);
     if (LabelTitle) {
-        const char *s = Get_String_From_LangPack(0, &AppTitle, 0);
-        LabelSetText(LabelTitle, s ? s : fallback_title);
+        if (Set_Text_Font_Label(0, LabelTitle, AppTitle.key_name, 0) == NULL)
+            LabelSetText(LabelTitle, fallback_title);
         LabelSetTextAllign(LabelTitle, ALLIGN_TEXT_CENTER);
         LabelSetWidgetAlign(LabelTitle, GSP_WIDGET_ALIGN_TOP_CENTER);
     }
 
-    /* Bottom line: bottom center, from language pack or fallback */
+    /* Bottom line: string and font from pack or fallback */
     LabelBottom = Crate_Label(DemoScreen, 0, SCREEN_VER_SIZE - 14, SCREEN_HOR_SIZE, 10, 2);
     if (LabelBottom) {
-        const char *s = Get_String_From_LangPack(0, &BottomLine, 0);
-        LabelSetText(LabelBottom, s ? s : fallback_bottom);
+        if (Set_Text_Font_Label(0, LabelBottom, BottomLine.key_name, 0) == NULL)
+            LabelSetText(LabelBottom, fallback_bottom);
         LabelSetTextAllign(LabelBottom, ALLIGN_TEXT_CENTER);
         LabelSetWidgetAlign(LabelBottom, GSP_WIDGET_ALIGN_BOTTOM_CENTER);
     }

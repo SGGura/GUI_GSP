@@ -25,7 +25,7 @@ Detailed porting guide, capabilities, and LVGL fonts:
 - **[PORTING_GUIDE.md](PORTING_GUIDE.md)** (Russian)
 - **[PORTING_GUIDE_EN.md](PORTING_GUIDE_EN.md)** (English)
 - **[PORTING_GUIDE_UK.md](PORTING_GUIDE_UK.md)** (Ukrainian)
-- **[MEDIA_AND_LANG_PACK.md](MEDIA_AND_LANG_PACK.md)** (EN) / **[MEDIA_AND_LANG_PACK_RU.md](MEDIA_AND_LANG_PACK_RU.md)** (RU) / **[MEDIA_AND_LANG_PACK_UK.md](MEDIA_AND_LANG_PACK_UK.md)** (UK) — creating FLASH binary (CrateMedia.cmd) and language pack (Langs.c, English.json → PackLang.lpn). **Next to each .json** place the converted LVGL font files with extension **.bin** (e.g. Ithaca_16.bin). **[Tools/](Tools/)** — **CrateLangsPack.exe** (included in repo) and [Tools/README.md](Tools/README.md).
+- **[MEDIA_AND_LANG_PACK.md](MEDIA_AND_LANG_PACK.md)** (EN) / **[MEDIA_AND_LANG_PACK_RU.md](MEDIA_AND_LANG_PACK_RU.md)** (RU) / **[MEDIA_AND_LANG_PACK_UK.md](MEDIA_AND_LANG_PACK_UK.md)** (UK) — creating FLASH binary (CrateMedia.cmd) and language pack (Langs.c, English.json → PackLang.lpn). Fonts can be **C sources** (e.g. **lv_font_unscii_8.c** in the project; no .bin needed) or **Binary** (**.bin** next to each .json for FLASH). **[Tools/](Tools/)** — **CrateLangsPack.exe** (included in repo) and [Tools/README.md](Tools/README.md).
 
 ---
 

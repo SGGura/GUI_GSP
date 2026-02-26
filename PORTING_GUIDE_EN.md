@@ -103,6 +103,11 @@ So any font generated for [LVGL](https://lvgl.io/) (e.g. with [LVGL Font Convert
 
 ### 3.2. Built-in fonts (in firmware)
 
+The library supports **two font sources**:
+
+1. **C fonts** — converted to `.c` (e.g. **lv_font_unscii_8.c**): add the file to the project, declare in **Fonts.h**, use `&lv_font_unscii_8` in code. In the language pack JSON you can use the name `"lv_font_unscii_8"` — **no .bin file next to the JSON is needed**; the library resolves it to the built-in font.
+2. **FLASH fonts** — converted to **Binary** (`.bin`), placed next to `.json` and loaded via **lv_font_load** from the pack (see section 3.4 and MEDIA_AND_LANG_PACK).
+
 **`GUI_GSP/Fonts/Fonts.h`** declares fonts included as source (`.c`) in the build:
 
 | Font | Description |
@@ -112,7 +117,7 @@ So any font generated for [LVGL](https://lvgl.io/) (e.g. with [LVGL Font Convert
 | **font_5x7_16**, **Pocket_Mem_16**, **Ithaca_16** | Additional fonts. |
 | **AllLangFont** | Pointer to font for language names (may be loaded from FLASH). |
 
-Widgets (Label, List, Table, Message, Keyboard, etc.) take an `lv_font_t *` (e.g. `&lv_font_unscii_8` or `&GSP_Arial_16` from `GUI_GSP.h`).
+Widgets (Label, List, Table, Message, Keyboard, etc.) take an `lv_font_t *` (e.g. `&lv_font_unscii_8` or a FLASH-loaded font).
 
 ### 3.3. Default font (DEFAULT_FONT)
 
@@ -137,8 +142,8 @@ In language packs, when switching language (**Load_Langs**), fonts can be loaded
 ### 3.5. Getting fonts in LVGL format
 
 - **[LVGL Font Converter](https://lvgl.io/tools/fontconverter)** ([LVGL](https://lvgl.io/)): load TTF/WOFF, set size, character range (e.g. Cyrillic), bpp; output:
-  - **C array** — `.c` file; add to the project and declare the font in **Fonts.h**.
-  - **Binary** — binary file for external memory, loaded with **lv_font_load** (format in section 10).
+  - **C array** — `.c` file (as **lv_font_unscii_8.c** in the repo): add to the project, declare in **Fonts.h**; use `&lv_font_unscii_8` in code; in the language pack JSON you can use the name `"lv_font_unscii_8"` — **no .bin needed**. Add more C fonts to the built-in table in **GSP_Langs.c** (`builtin_fonts` array).
+  - **Binary** — `.bin` file for external memory, loaded with **lv_font_load**; place next to `.json` when building the pack (see MEDIA_AND_LANG_PACK).
 - **Data for FLASH** (fonts, images, resources) can be prepared with [Microchip](https://www.microchip.com/) **grc.jar** (Graphics Resource Converter): part of Microchip tooling, converts fonts and images for internal/external memory. Run: `grc.jar` (Linux/macOS) or `launch_grc.bat` (Windows). Docs: [Microchip Developer Help — Graphics](https://developerhelp.microchip.com/xwiki/bin/view/software-tools/mgs/mgs-harmony-guide/gfx-assets/).
 - Generated fonts are **drop-in** compatible with GUI_GSP: same `lv_font_t` and lv_font_fmt_txt format.
 
@@ -146,7 +151,7 @@ In language packs, when switching language (**Load_Langs**), fonts can be loaded
 
 Text is drawn via **DrawTextUTF8** and related functions (**GSP_DrawText.c**) with **UTF-8** support. Font is passed as `lv_font_t *font`. For Cyrillic or other scripts, include the right character range when converting the font.
 
-**Summary for [LVGL](https://lvgl.io/):** the library uses the same fonts and format as LVGL 8.x. You can use only built-in fonts, only FLASH-loaded fonts, or both; default font is **DEFAULT_FONT** in the config.
+**Summary for [LVGL](https://lvgl.io/):** the library uses the same fonts and format as LVGL 8.x. You can use **C fonts** (`.c` in the project, e.g. **lv_font_unscii_8.c**), **FLASH fonts** (`.bin` in the pack), or both; default font is **DEFAULT_FONT** in the config.
 
 ---
 
