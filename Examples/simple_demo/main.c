@@ -1,6 +1,7 @@
 /**
  * Simple demo application for GUI_GSP.
  * One screen, two labels; strings from language pack (English.json) when available.
+ * Demonstrates session save/restore: the last active screen is remembered across reboots.
  *
  * Integration:
  * - Add GUI_GSP and your display driver to the project (see PORTING_GUIDE).
@@ -25,13 +26,45 @@ static _GSP_Label  *LabelBottom;
 static const char *fallback_title   = "GUI_GSP Demo";
 static const char *fallback_bottom  = "< Back";
 
+/*
+ * Platform-specific NVM read/write — replace with your EEPROM/Flash driver.
+ * These stubs show the required function signatures.
+ */
+#ifdef USED_SESSION
+static int NVM_Read(unsigned int address, void *buffer, unsigned int size)
+{
+    /* TODO: implement for your platform, e.g.:
+     * return EEPROM_Read(address, buffer, size); */
+    (void)address; (void)buffer; (void)size;
+    return -1;
+}
+
+static int NVM_Write(unsigned int address, const void *buffer, unsigned int size)
+{
+    /* TODO: implement for your platform, e.g.:
+     * return EEPROM_Write(address, buffer, size); */
+    (void)address; (void)buffer; (void)size;
+    return -1;
+}
+
+static GSP_SessionStorage SessionStorage = {
+    .read         = NVM_Read,
+    .write        = NVM_Write,
+    .base_address = 0x0000
+};
+#endif
+
+#define SCREEN_ID_DEMO  0
+#define SCREEN_ID_SECOND 1
+
+static void CreateDemoScreen(void);
+static void CreateSecondScreen(void);
+
 static void CreateDemoScreen(void)
 {
-    /* Full-screen: 0, 0, SCREEN_HOR_SIZE, SCREEN_VER_SIZE */
-    DemoScreen = Crate_Screen(0, 0, SCREEN_HOR_SIZE, SCREEN_VER_SIZE, 0);
+    DemoScreen = Crate_Screen(0, 0, SCREEN_HOR_SIZE, SCREEN_VER_SIZE, SCREEN_ID_DEMO);
     if (!DemoScreen) return;
 
-    /* Title label: string and font from language pack (e.g. C font lv_font_unscii_8) or fallback */
     LabelTitle = Crate_Label(DemoScreen, 0, 2, SCREEN_HOR_SIZE, 12, 1);
     if (LabelTitle) {
         if (Set_Text_Font_Label(0, LabelTitle, AppTitle.key_name, 0) == NULL)
@@ -40,7 +73,6 @@ static void CreateDemoScreen(void)
         LabelSetWidgetAlign(LabelTitle, GSP_WIDGET_ALIGN_TOP_CENTER);
     }
 
-    /* Bottom line: string and font from pack or fallback */
     LabelBottom = Crate_Label(DemoScreen, 0, SCREEN_VER_SIZE - 14, SCREEN_HOR_SIZE, 10, 2);
     if (LabelBottom) {
         if (Set_Text_Font_Label(0, LabelBottom, BottomLine.key_name, 0) == NULL)
@@ -50,24 +82,51 @@ static void CreateDemoScreen(void)
     }
 
     Set_Active_Screen(DemoScreen);
+
+#ifdef USED_SESSION
+    GSP_Session_Save();
+#endif
+}
+
+static void CreateSecondScreen(void)
+{
+    _GSP_Screen *scr = Crate_Screen(0, 0, SCREEN_HOR_SIZE, SCREEN_VER_SIZE, SCREEN_ID_SECOND);
+    if (!scr) return;
+
+    _GSP_Label *lbl = Crate_Label(scr, 0, 0, SCREEN_HOR_SIZE, 12, 10);
+    if (lbl) {
+        LabelSetText(lbl, "Screen 2");
+        LabelSetTextAllign(lbl, ALLIGN_TEXT_CENTER);
+        LabelSetWidgetAlign(lbl, GSP_WIDGET_ALIGN_MIDDLE_CENTER);
+    }
+
+    Set_Active_Screen(scr);
+
+#ifdef USED_SESSION
+    GSP_Session_Save();
+#endif
 }
 
 int main(void)
 {
-    /* 1. Init display (your Init_LCD) is called from GUI_GSP_Init via GSP_HW */
     GUI_GSP_Init();
 
-    /* 2. Optional: init language pack from FLASH. Pass NULL if no pack linked yet. */
-    /* When PackLang is available (from CrateMedia): Init_Langs((void *)&PackLang, 0); */
     if (Init_Langs(NULL, 0) >= 0) {
-        /* Pack loaded; Get_String_From_LangPack will return strings from pack */
+        /* Pack loaded */
     }
-    /* Else: no pack, use fallback strings in CreateDemoScreen */
 
-    /* 3. Create and show demo screen */
+#ifdef USED_SESSION
+    GSP_Session_Init(&SessionStorage);
+    GSP_Session_RegisterScreen(SCREEN_ID_DEMO,   CreateDemoScreen);
+    GSP_Session_RegisterScreen(SCREEN_ID_SECOND,  CreateSecondScreen);
+
+    if (GSP_Session_Restore() != 0) {
+        CreateDemoScreen();
+    }
+#else
     CreateDemoScreen();
+#endif
 
-    /* 4. Main loop: only GUI_Run(). Timer ISR must call GUI_TimerClock(period_ms). */
     for (;;) {
         GUI_Run();
     }

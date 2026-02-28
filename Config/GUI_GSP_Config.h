@@ -122,6 +122,7 @@ void SetBright(short light);
 #define USED_LIST
 #define USED_MESSAGE
 #define USED_KEYBOARD
+#define USED_SESSION
 
 #define DEFAULT_FONT  &lv_font_unscii_8
 #define DEFAULT_TEXT  "Text"

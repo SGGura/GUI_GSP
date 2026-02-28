@@ -399,7 +399,105 @@ GUI_TimerClock(10);   // 10 — период прерывания в мс
 
 ---
 
-## 13. Частые вопросы
+## 13. Сохранение и восстановление сессии (GSP_Session)
+
+Модуль **GSP_Session** позволяет сохранять ID активного экрана (и произвольные пользовательские данные) в энергонезависимую память (EEPROM, Flash и т.д.), а при следующем включении устройства — автоматически восстанавливать тот экран, на котором пользователь остановился.
+
+### 13.1. Включение модуля
+
+В **GUI_GSP_Config.h** раскомментируйте или добавьте:
+
+```c
+#define USED_SESSION
+```
+
+### 13.2. Реализация платформенных callback'ов
+
+Модуль не зависит от конкретного железа. Вы реализуете две функции — чтение и запись:
+
+```c
+int NVM_Read(unsigned int address, void *buffer, unsigned int size);
+int NVM_Write(unsigned int address, const void *buffer, unsigned int size);
+```
+
+Обе функции должны возвращать **0** при успехе. Затем заполните структуру `GSP_SessionStorage`:
+
+```c
+GSP_SessionStorage storage = {
+    .read         = NVM_Read,
+    .write        = NVM_Write,
+    .base_address = 0x1000   // начальный адрес в NVM
+};
+```
+
+### 13.3. Инициализация и регистрация экранов
+
+Перед вызовом `GSP_Session_Restore()` нужно зарегистрировать все экраны — связать ID экрана с функцией его создания:
+
+```c
+GUI_GSP_Init();
+
+GSP_Session_Init(&storage);
+GSP_Session_RegisterScreen(0, CreateMainScreen);
+GSP_Session_RegisterScreen(1, CreateSettingsScreen);
+GSP_Session_RegisterScreen(2, CreateInfoScreen);
+```
+
+### 13.4. Восстановление сессии при запуске
+
+```c
+if (GSP_Session_Restore() != 0) {
+    CreateMainScreen();   // экран по умолчанию
+}
+```
+
+`GSP_Session_Restore()` читает данные из NVM, проверяет контрольную сумму и вызывает зарегистрированную функцию создания экрана. Если данные невалидны или экран не зарегистрирован, возвращается код ошибки.
+
+### 13.5. Сохранение сессии
+
+Вызывайте при переключении экранов или в любой удобный момент:
+
+```c
+GSP_Session_Save();                        // сохранить только ID экрана
+GSP_Session_SaveWithData(&my_data, size);  // сохранить ID + пользовательские данные (до 32 байт)
+```
+
+### 13.6. Пользовательские данные
+
+В `GSP_SessionData` зарезервировано **32 байта** для пользовательских данных (`GSP_SESSION_USER_DATA_SIZE`). Это могут быть, например, индекс пункта меню, выбранный язык, положение курсора и т.д.
+
+```c
+// Сохранение
+unsigned char brightness = 80;
+GSP_Session_SaveWithData(&brightness, sizeof(brightness));
+
+// Восстановление (после GSP_Session_Restore)
+unsigned char saved_brightness;
+GSP_Session_GetUserData(&saved_brightness, sizeof(saved_brightness));
+```
+
+### 13.7. Очистка сессии
+
+```c
+GSP_Session_Clear();   // стирает сохранённые данные из NVM
+```
+
+### 13.8. API
+
+| Функция | Описание |
+|---------|----------|
+| **GSP_Session_Init(storage)** | Инициализация модуля, привязка к NVM |
+| **GSP_Session_RegisterScreen(id, func)** | Регистрация экрана: ID → функция создания |
+| **GSP_Session_Save()** | Сохранить ID активного экрана в NVM |
+| **GSP_Session_SaveWithData(data, size)** | Сохранить ID + пользовательские данные |
+| **GSP_Session_Restore()** | Прочитать NVM и создать экран (возвращает 0 при успехе) |
+| **GSP_Session_GetUserData(buf, size)** | Получить сохранённые пользовательские данные |
+| **GSP_Session_Clear()** | Стереть сессию из NVM |
+| **GSP_Session_GetSavedScreenID()** | Получить ID экрана без восстановления |
+
+---
+
+## 14. Частые вопросы
 
 **Нужно ли реализовывать PutPixel, Line, Bar?**  
 Нет. Вся графика в библиотеке, рисует в один буфер. Нужны только Init_LCD и Refresh_LCD.

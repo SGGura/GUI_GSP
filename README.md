@@ -2,7 +2,7 @@
 
 A GUI library for **embedded systems with small displays and a single framebuffer**. Optimized for limited RAM: one shared buffer, no double buffering.
 
-**Features:** widgets (Screen, Label, Table, List, Chart, Image, ProgressBar, Spinner, Panel, **GSP_Timer**, Message, Keyboard), **[LVGL](https://lvgl.io/) fonts**, UTF-8 text output, **image animation** (Image: frames, loop/once/ping-pong modes), localization. Porting: implement display init and buffer output to the screen.
+**Features:** widgets (Screen, Label, Table, List, Chart, Image, ProgressBar, Spinner, Panel, **GSP_Timer**, Message, Keyboard), **[LVGL](https://lvgl.io/) fonts**, UTF-8 text output, **image animation** (Image: frames, loop/once/ping-pong modes), localization, **session save/restore** (GSP_Session). Porting: implement display init and buffer output to the screen.
 
 **Version:** 1.2 (see `GUI_GSP.h`)
 

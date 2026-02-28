@@ -399,7 +399,105 @@ GUI_TimerClock(10);   // 10 = interrupt period in ms
 
 ---
 
-## 13. FAQ
+## 13. Session save and restore (GSP_Session)
+
+The **GSP_Session** module saves the active screen ID (and optional user data) to non-volatile memory (EEPROM, Flash, etc.) so the device can restore the exact screen the user was on after a power cycle or reset.
+
+### 13.1. Enabling the module
+
+In **GUI_GSP_Config.h** add:
+
+```c
+#define USED_SESSION
+```
+
+### 13.2. Platform-specific NVM callbacks
+
+Implement two functions for reading and writing to your non-volatile storage:
+
+```c
+int NVM_Read(unsigned int address, void *buffer, unsigned int size);
+int NVM_Write(unsigned int address, const void *buffer, unsigned int size);
+```
+
+Both must return **0** on success. Then fill in the `GSP_SessionStorage` structure:
+
+```c
+GSP_SessionStorage storage = {
+    .read         = NVM_Read,
+    .write        = NVM_Write,
+    .base_address = 0x1000   // starting address in NVM
+};
+```
+
+### 13.3. Initialization and screen registration
+
+Before calling `GSP_Session_Restore()`, register all screens — bind each screen ID to its creation function:
+
+```c
+GUI_GSP_Init();
+
+GSP_Session_Init(&storage);
+GSP_Session_RegisterScreen(0, CreateMainScreen);
+GSP_Session_RegisterScreen(1, CreateSettingsScreen);
+GSP_Session_RegisterScreen(2, CreateInfoScreen);
+```
+
+### 13.4. Restoring the session on startup
+
+```c
+if (GSP_Session_Restore() != 0) {
+    CreateMainScreen();   // default screen
+}
+```
+
+`GSP_Session_Restore()` reads data from NVM, validates the checksum, and calls the registered screen creation function. If data is invalid or the screen ID is not registered, it returns an error code.
+
+### 13.5. Saving the session
+
+Call when switching screens or at any convenient point:
+
+```c
+GSP_Session_Save();                        // save screen ID only
+GSP_Session_SaveWithData(&my_data, size);  // save screen ID + user data (up to 32 bytes)
+```
+
+### 13.6. User data
+
+`GSP_SessionData` reserves **32 bytes** for user data (`GSP_SESSION_USER_DATA_SIZE`). Use this for things like menu index, selected language, cursor position, etc.
+
+```c
+// Save
+unsigned char brightness = 80;
+GSP_Session_SaveWithData(&brightness, sizeof(brightness));
+
+// Restore (after GSP_Session_Restore)
+unsigned char saved_brightness;
+GSP_Session_GetUserData(&saved_brightness, sizeof(saved_brightness));
+```
+
+### 13.7. Clearing the session
+
+```c
+GSP_Session_Clear();   // erases saved data from NVM
+```
+
+### 13.8. API reference
+
+| Function | Description |
+|----------|-------------|
+| **GSP_Session_Init(storage)** | Initialize module, bind to NVM |
+| **GSP_Session_RegisterScreen(id, func)** | Register screen: ID → creation function |
+| **GSP_Session_Save()** | Save active screen ID to NVM |
+| **GSP_Session_SaveWithData(data, size)** | Save screen ID + user data |
+| **GSP_Session_Restore()** | Read NVM and create screen (returns 0 on success) |
+| **GSP_Session_GetUserData(buf, size)** | Retrieve saved user data |
+| **GSP_Session_Clear()** | Erase session from NVM |
+| **GSP_Session_GetSavedScreenID()** | Get saved screen ID without restoring |
+
+---
+
+## 14. FAQ
 
 **Do I need to implement PutPixel, Line, Bar?**  
 No. All graphics are in the library, drawing into one buffer. You only need Init_LCD and Refresh_LCD.

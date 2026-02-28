@@ -155,6 +155,7 @@ void GSP_RunShift(const char *text, lv_font_t *font, int available_width, int mo
 #include "GSP_Table.h"         // Использует Label.h, поэтому после него
 #include "GSP_Timer.h"     // Таймеры
 #include "GSP_Keyboard.h"  // Виджет клавиатуры
+#include "GSP_Session.h"   // Сохранение и восстановление сессии
 
 
 #endif	/* GUI_GSP_H */
