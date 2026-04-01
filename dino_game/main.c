@@ -94,6 +94,7 @@ static lv_obj_t *hi_score_label;
 static lv_obj_t *gameover_label;
 static lv_obj_t *restart_hint;
 static lv_obj_t *start_hint;
+static lv_obj_t *touch_zone;
 
 /* ─── game state ──────────────────────────────────────────────────── */
 
@@ -515,6 +516,39 @@ static void game_loop_cb(lv_timer_t *t) {
 
 /* ─── input ───────────────────────────────────────────────────────── */
 
+/* check whether a point is inside the dino bounding box */
+static bool point_on_dino(int px, int py) {
+    int dh = (dino_ducking && !dino_jumping) ? DINO_DUCK_H : DINO_H;
+    int dw = (dino_ducking && !dino_jumping) ? DINO_DUCK_W : DINO_W;
+    int dy = (int)dino_y - dh;
+    /* generous 10px margin around the sprite for easy tapping */
+    return px >= DINO_X - 10 && px <= DINO_X + dw + 10 &&
+           py >= dy - 10     && py <= (int)dino_y + 10;
+}
+
+static void touch_event_cb(lv_event_t *e) {
+    if (lv_event_get_code(e) != LV_EVENT_CLICKED) return;
+
+    lv_point_t pt;
+    lv_indev_get_point(lv_indev_active(), &pt);
+
+    if (game_state == STATE_IDLE) {
+        if (point_on_dino(pt.x, pt.y)) {
+            start_game();
+            dino_vy = JUMP_VELOCITY; dino_jumping = true;
+        }
+        return;
+    }
+    if (game_state == STATE_GAMEOVER) {
+        start_game();
+        return;
+    }
+    /* running — tap anywhere = jump */
+    if (!dino_jumping) {
+        dino_vy = JUMP_VELOCITY; dino_jumping = true;
+    }
+}
+
 static void key_event_cb(lv_event_t *e) {
     if (lv_event_get_code(e) != LV_EVENT_KEY) return;
     uint32_t k = lv_event_get_key(e);
@@ -619,17 +653,27 @@ int main(void) {
     restart_hint = lv_label_create(scr);
     lv_obj_set_style_text_font(restart_hint, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(restart_hint, lv_color_hex(0x999999), 0);
-    lv_label_set_text(restart_hint, "SPACE / ENTER to restart");
+    lv_label_set_text(restart_hint, "Tap to restart");
     lv_obj_align(restart_hint, LV_ALIGN_CENTER, 0, 0);
     lv_obj_add_flag(restart_hint, LV_OBJ_FLAG_HIDDEN);
 
     start_hint = lv_label_create(scr);
     lv_obj_set_style_text_font(start_hint, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(start_hint, lv_color_hex(0x999999), 0);
-    lv_label_set_text(start_hint, "SPACE / UP to start");
+    lv_label_set_text(start_hint, "Tap the dino to start!");
     lv_obj_align(start_hint, LV_ALIGN_CENTER, 0, 0);
 
-    /* keyboard focus */
+    /* fullscreen touch zone (transparent, on top of everything) */
+    touch_zone = lv_obj_create(scr);
+    lv_obj_remove_style_all(touch_zone);
+    lv_obj_set_size(touch_zone, SCREEN_W, SCREEN_H);
+    lv_obj_set_pos(touch_zone, 0, 0);
+    lv_obj_set_style_bg_opa(touch_zone, LV_OPA_TRANSP, 0);
+    lv_obj_add_flag(touch_zone, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_remove_flag(touch_zone, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_event_cb(touch_zone, touch_event_cb, LV_EVENT_CLICKED, NULL);
+
+    /* keyboard focus (zero-size, invisible) */
     lv_obj_t *focus = lv_obj_create(scr);
     lv_obj_remove_style_all(focus);
     lv_obj_set_size(focus, 0, 0);
