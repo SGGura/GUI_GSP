@@ -1,8 +1,10 @@
 /*
  * Chrome Dino (T-Rex Runner) — pure LVGL widgets, no canvas.
  *
- * Physical display: 320×480 (portrait)
- * Rotation: 90° → logical 480×320 (landscape)
+ * Target display: 320×480 physical (portrait), rotated 90° → 480×320 landscape.
+ * For SDL simulator the window is opened at 480×320 directly.
+ * On real hardware call lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_90)
+ * after creating the display driver for the 320×480 panel.
  *
  * All sprites built from pre-allocated lv_obj rectangles with 2px pixel blocks.
  */
@@ -14,10 +16,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-/* ─── physical / logical display ──────────────────────────────────── */
-
-#define PHYS_W  320
-#define PHYS_H  480
+/* ─── logical display (after rotation) ────────────────────────────── */
 
 #define SCREEN_W  480
 #define SCREEN_H  320
@@ -571,11 +570,12 @@ int main(void) {
     lv_init();
 
     /*
-     * Physical display is 320×480 (portrait).
-     * Rotate 90° so the game runs in landscape at 480×320.
+     * For SDL simulator: open window at logical size directly (480×320).
+     * On real hardware with a 320×480 panel, create the display at 320×480
+     * and call lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_90).
      */
-    lv_display_t *disp = lv_sdl_window_create(PHYS_W, PHYS_H);
-    lv_display_set_rotation(disp, LV_DISPLAY_ROTATION_90);
+    lv_display_t *disp = lv_sdl_window_create(SCREEN_W, SCREEN_H);
+    (void)disp;
 
     lv_indev_t *kb    = lv_sdl_keyboard_create();
     lv_indev_t *mouse = lv_sdl_mouse_create();
